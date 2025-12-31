@@ -1,0 +1,102 @@
+.hero-section {
+  background: linear-gradient(135deg, #0a0a0a 0%, #141414 50%, #0a0a0a 100%);
+  position: relative;
+}
+
+/* Animated Lines Background */
+.hero-lines {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 122, 100, 0.3) 20%,
+    rgba(255, 122, 100, 0.5) 50%,
+    rgba(255, 122, 100, 0.3) 80%,
+    transparent 100%
+  );
+  transform-origin: center;
+}
+
+.hero-bg-shapes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+}
+
+.shape-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255, 122, 100, 0.2) 0%, transparent 70%);
+  top: -10%;
+  right: 5%;
+}
+
+.shape-2 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 138, 91, 0.15) 0%, transparent 70%);
+  bottom: -15%;
+  left: -5%;
+}
+
+/* Spotlight Overlay Effect */
+.hero-spotlight-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    600px circle at var(--mouse-x) var(--mouse-y),
+    transparent 0%,
+    rgba(10, 10, 10, 0.95) 100%
+  );
+  z-index: 5;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+@media (max-width: 768px) {
+  .shape {
+    filter: blur(70px);
+  }
+
+  .shape-1 {
+    width: 300px;
+    height: 300px;
+  }
+
+  .shape-2 {
+    width: 350px;
+    height: 350px;
+  }
+
+  .hero-line {
+    opacity: 0.5;
+  }
+
+  /* Smaller spotlight on mobile */
+  .hero-spotlight-overlay {
+    background: radial-gradient(
+      400px circle at var(--mouse-x) var(--mouse-y),
+      transparent 0%,
+      rgba(10, 10, 10, 0.95) 100%
+    );
+  }
+}

@@ -1,0 +1,25 @@
+.services-section {
+  position: relative;
+}
+
+.service-card {
+  position: relative;
+  height: 100%;
+}
+
+.service-card-inner {
+  position: relative;
+  border-radius: 0;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.service-card:hover .service-card-inner {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(255, 122, 100, 0.2);
+}
+
+@media (max-width: 768px) {
+  .service-card:hover .service-card-inner {
+    transform: translateY(-4px);
+  }
+}

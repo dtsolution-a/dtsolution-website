@@ -1,0 +1,13 @@
+.contact-section {
+  position: relative;
+}
+
+input,
+textarea {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(153, 153, 153, 0.5);
+}

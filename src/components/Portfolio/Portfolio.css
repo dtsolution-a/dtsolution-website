@@ -1,0 +1,18 @@
+.portfolio-section {
+  position: relative;
+}
+
+.portfolio-item {
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.portfolio-item:hover {
+  box-shadow: 0 20px 40px rgba(255, 122, 100, 0.3);
+}
+
+@media (max-width: 768px) {
+  .portfolio-item:hover {
+    transform: none;
+  }
+}

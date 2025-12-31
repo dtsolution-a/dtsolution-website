@@ -1,0 +1,24 @@
+/* App-specific styles */
+.App {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Hide default cursor on desktop */
+@media (min-width: 768px) {
+  * {
+    cursor: none !important;
+  }
+
+  a, button, .cursor-hover {
+    cursor: none !important;
+  }
+}
+
+/* Mobile - show default cursor */
+@media (max-width: 767px) {
+  .custom-cursor,
+  .custom-cursor-follower {
+    display: none !important;
+  }
+}
