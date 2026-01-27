@@ -6,6 +6,7 @@ import InvoiceGenerator from './components/InvoiceGenerator';
 import Home from './components/Home';
 import Sangraha from './components/Sangraha';
 import ServiceDetail from './components/Services/ServiceDetail'; // Naya Page Import
+import QuotationGenerator from './components/QuotationGenerator';
 
 // --- SCROLL HELPER COMPONENT ---
 // Ye component ensure karega ki naye page par top pe khule
@@ -23,7 +24,7 @@ const ScrollToTopAndHash = () => {
         }, 100);
       }
     } 
-    // Agar naya page hai (eg: /service/branding) to Top pe jao
+
     else {
       window.scrollTo(0, 0);
     }
@@ -35,7 +36,7 @@ const ScrollToTopAndHash = () => {
 function App() {
   return (
     <Router>
-      <ScrollToTopAndHash /> {/* Ye line add karni zaroori hai */}
+      <ScrollToTopAndHash />
       
       <Routes>
         <Route path="/" element={<Home />} />
@@ -44,6 +45,7 @@ function App() {
         
         {/* Naya Dynamic Route for Services */}
         <Route path="/service/:id" element={<ServiceDetail />} />
+        <Route path="/internal-tools/quotation" element={<QuotationGenerator />} />
       </Routes>
     </Router>
   );

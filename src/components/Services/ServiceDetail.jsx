@@ -34,7 +34,7 @@ const PlanInquiryModal = ({ planName, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
-  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxz8E1AdJS05ip39-2ozU9UHGbSh40LZ46QbHmX6i-8Ecy1Q4as0kkjil0JspEPGODv/exec";
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzj738OqWdH5upW-EDf4eziEggljqrSs2b1-v49MbFrWNfzY-Hv5ofboYgby3y6mHML/exec";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
