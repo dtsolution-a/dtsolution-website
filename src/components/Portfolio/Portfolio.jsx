@@ -14,15 +14,6 @@ const projects = [
     link: "https://www.figma.com/proto/a6RSXTATsguMaAsZ0mR7TG/Love-Your-Nails?node-id=1-2&p=f&t=gYW5wRtahVZMUb1S-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1" // Add your Figma links here
   },
   {
-    title: "Patel Packaging UI", // You might want to change this duplicate title
-    category: "Industrial Branding Ui",
-    description: "Reimagining the future of digital banking with a complete visual identity overhaul.",
-    color: "#1a1a1a",
-    img: "https://cdn.myportfolio.com/058ec307-2fcd-4d98-a096-c63e56b455d0/a00f40d1-257f-4801-aedf-15bdad05954d_rw_3840.jpg?h=da7a3a4d48e8d5dfbbfafa8cca762ad2",
-    tags: ["React", "UI/UX", "Development"],
-    link: "https://www.figma.com/proto/D3JW4keOlAKR5mrW6GQ6vr?content-scaling=fixed&kind=proto&node-id=1-2&page-id=0%3A1&scaling=min-zoom&starting-point-node-id=1%3A2&fuid=1238818642135714882"
-  },
-  {
     title: "Fin-Chat",
     category: "Fintech Branding",
     description: "A high-performance streaming interface designed for millions of concurrent users.",
