@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { useReactToPrint } from 'react-to-print';
+import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { FaPlus, FaPrint, FaTrash, FaCalculator, FaPercentage, FaRupeeSign, FaArrowLeft, FaSpinner } from 'react-icons/fa';
+import { FaPlus, FaPrint, FaTrash, FaCalculator, FaPercentage, FaRupeeSign, FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import CustomCursor from './CustomCursor';
 
 // --- IMPORT IMAGES ---
 import dtsLogo from '../assets/images/logo 121.png'; 
@@ -26,39 +26,11 @@ const numToWords = (num) => {
 
 const InvoiceGenerator = () => {
   const navigate = useNavigate();
-  const componentRef = useRef(null);
 
-  // --- 1. CSS FOR PAGINATION & WATERMARK ---
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      * { cursor: auto !important; }
-      .print-btn { cursor: pointer !important; }
-      .custom-cursor { display: none !important; }
-      
-      /* Print Specific Styles for Multi-page */
-      @media print {
-        @page { size: A4; margin: 10mm; }
-        body { -webkit-print-color-adjust: exact; }
-        
-        /* Ensure Table Headers Repeat on New Pages */
-        thead { display: table-header-group; }
-        tfoot { display: table-footer-group; }
-        tr { page-break-inside: avoid; }
-        
-        /* Watermark Persistence */
-        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: -1; }
-      }
-    `;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
-
-  // --- UPDATED COMPANY DETAILS ---
+  // --- 1. COMPANY CONFIG ---
   const companyDetails = {
     name: "DT Solution",
-    slogan: "Designing your transformation into Success",
-    // More detailed address for trust
+    slogan: "Designing Transformation into Success",
     address: "G-505, VSH 1, Gota Road,\nAhmedabad - 380060, Gujarat",
     email: "dt.solution.service@gmail.com",
     phone: "+91 70482 77402",
@@ -68,10 +40,11 @@ const InvoiceGenerator = () => {
 
   const defaultTerms = [
     "Payment is due within 15 days from the date of invoice.",
-    "Late payments may delay future project deliveries",
+    "Late payments may delay future project deliveries.",
     "Please quote the Invoice Number when remitting funds.",
   ];
 
+  // --- 2. STATE ---
   const [invoiceData, setInvoiceData] = useState({
     invoiceNo: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
     date: new Date().toISOString().split('T')[0],
@@ -87,12 +60,7 @@ const InvoiceGenerator = () => {
   const [discountValue, setDiscountValue] = useState(0);
   const [totals, setTotals] = useState({ subtotal: 0, discountAmt: 0, total: 0 });
 
-  const getDueDate = (dateString) => {
-    const date = new Date(dateString);
-    date.setDate(date.getDate() + 15);
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
-
+  // --- 3. CALCULATIONS ---
   useEffect(() => {
     const sub = items.reduce((acc, item) => acc + (item.qty * item.rate), 0);
     let discAmt = 0;
@@ -105,6 +73,13 @@ const InvoiceGenerator = () => {
     setTotals({ subtotal: sub, discountAmt: discAmt, total: final > 0 ? final : 0 });
   }, [items, discountValue, discountType]);
 
+  const getDueDate = (dateString) => {
+    const date = new Date(dateString);
+    date.setDate(date.getDate() + 15);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  // --- 4. HANDLERS ---
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
     newItems[index][field] = value;
@@ -114,18 +89,47 @@ const InvoiceGenerator = () => {
   const addItem = () => setItems([...items, { description: '', qty: 1, rate: 0 }]);
   const removeItem = (index) => setItems(items.filter((_, i) => i !== index));
 
-  const handlePrint = useReactToPrint({
-    contentRef: componentRef,
-    documentTitle: `INV_${invoiceData.clientName || 'Client'}_${invoiceData.invoiceNo}`,
-  });
+  // --- 5. NATIVE PRINT FUNCTION ---
+  const handlePrint = () => {
+    window.print();
+  };
 
   const upiString = `upi://pay?pa=${companyDetails.upiId}&pn=DT%20Solution&am=${totals.total}&cu=INR`;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-4 md:p-6 font-sans">
+    <div className="min-h-screen bg-[#050505] text-white p-4 md:p-6 font-sans print:bg-white print:p-0">
       
-      {/* Top Bar */}
-      <div className="flex justify-between items-center mb-6 max-w-[1200px] mx-auto bg-[#1a1a1a] p-4 rounded-xl border border-white/10 shadow-lg relative z-[9999] print:hidden">
+      {/* --- CSS FOR PRINTING --- */}
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+          
+          @media print {
+            @page { margin: 0; size: A4; }
+            body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            /* This class forces the invoice to take full screen on print */
+            .print-only-container { 
+                display: block !important; 
+                width: 100% !important; 
+                height: 100% !important; 
+                position: absolute; 
+                top: 0; 
+                left: 0; 
+                margin: 0; 
+                padding: 0;
+                overflow: visible !important;
+            }
+            /* Hide scrollbars */
+            ::-webkit-scrollbar { display: none; }
+          }
+        `}
+      </style>
+
+      <div className="fixed inset-0 z-[9999] pointer-events-none no-print"><CustomCursor /></div>
+
+      {/* --- TOP BAR (Hidden on Print) --- */}
+      <div className="flex justify-between items-center mb-6 max-w-[1400px] mx-auto bg-[#1a1a1a] p-4 rounded-xl border border-white/10 shadow-lg relative z-[50] no-print">
         <h1 className="text-xl font-bold flex items-center gap-2 text-coral">
           <FaCalculator /> Internal Invoice Tool
         </h1>
@@ -136,54 +140,38 @@ const InvoiceGenerator = () => {
           
           <button 
             onClick={handlePrint}
-            className="print-btn bg-white text-black px-6 py-2 rounded-full font-bold text-sm hover:bg-coral hover:text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg active:scale-95"
+            className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm hover:bg-coral hover:text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg active:scale-95"
           >
             <FaPrint /> Print / Save PDF
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 max-w-[1200px] mx-auto items-start relative z-10">
+      <div className="flex flex-col lg:flex-row gap-8 max-w-[1400px] mx-auto items-start relative z-10 no-print">
         
-        {/* --- LEFT: EDITOR FORM --- */}
-        <div className="w-full lg:w-[400px] bg-[#121212] p-6 rounded-xl border border-white/10 shrink-0 shadow-xl h-[85vh] overflow-y-auto custom-scrollbar print:hidden">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-6 border-b border-white/10 pb-2">Details</h2>
+        {/* --- LEFT: EDITOR FORM (Hidden on Print) --- */}
+        <div className="w-full lg:w-[400px] bg-[#121212] p-6 rounded-xl border border-white/10 shrink-0 shadow-xl h-[85vh] overflow-y-auto custom-scrollbar no-print">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-6 border-b border-white/10 pb-2">Invoice Details</h2>
           
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] text-gray-500 uppercase block mb-1">Inv No</label>
-                <input 
-                  type="text" value={invoiceData.invoiceNo} 
-                  onChange={(e) => setInvoiceData({...invoiceData, invoiceNo: e.target.value})} 
-                  className="w-full bg-[#0a0a0a] border border-white/20 p-2.5 rounded text-sm text-white focus:border-coral outline-none" 
-                />
+                <input type="text" value={invoiceData.invoiceNo} onChange={(e) => setInvoiceData({...invoiceData, invoiceNo: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/20 p-2.5 rounded text-sm text-white focus:border-coral outline-none" />
               </div>
               <div>
                 <label className="text-[10px] text-gray-500 uppercase block mb-1">Date</label>
-                <input 
-                  type="date" value={invoiceData.date} 
-                  onChange={(e) => setInvoiceData({...invoiceData, date: e.target.value})} 
-                  className="w-full bg-[#0a0a0a] border border-white/20 p-2.5 rounded text-sm text-white focus:border-coral outline-none" 
-                />
+                <input type="date" value={invoiceData.date} onChange={(e) => setInvoiceData({...invoiceData, date: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/20 p-2.5 rounded text-sm text-white focus:border-coral outline-none" />
               </div>
             </div>
 
             <div>
               <label className="text-[10px] text-gray-500 uppercase block mb-1">Client Name</label>
-              <input 
-                type="text" placeholder="Client Name" value={invoiceData.clientName} 
-                onChange={(e) => setInvoiceData({...invoiceData, clientName: e.target.value})} 
-                className="w-full bg-[#0a0a0a] border border-white/20 p-2.5 rounded text-sm text-white focus:border-coral outline-none" 
-              />
+              <input type="text" placeholder="Client Name" value={invoiceData.clientName} onChange={(e) => setInvoiceData({...invoiceData, clientName: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/20 p-2.5 rounded text-sm text-white focus:border-coral outline-none" />
             </div>
             <div>
               <label className="text-[10px] text-gray-500 uppercase block mb-1">Client Address</label>
-              <textarea 
-                placeholder="Address, City, State" rows="2" value={invoiceData.clientAddress} 
-                onChange={(e) => setInvoiceData({...invoiceData, clientAddress: e.target.value})} 
-                className="w-full bg-[#0a0a0a] border border-white/20 p-2.5 rounded text-sm text-white focus:border-coral outline-none resize-none" 
-              />
+              <textarea placeholder="Address, City, State" rows="2" value={invoiceData.clientAddress} onChange={(e) => setInvoiceData({...invoiceData, clientAddress: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/20 p-2.5 rounded text-sm text-white focus:border-coral outline-none resize-none" />
             </div>
             
             <div className="pt-4 border-t border-white/10">
@@ -195,17 +183,13 @@ const InvoiceGenerator = () => {
               <div className="space-y-3 mb-4">
                 {items.map((item, i) => (
                   <div key={i} className="bg-[#1a1a1a] p-3 rounded border border-white/5 relative group hover:border-white/20 transition-colors">
-                    <input 
-                      type="text" placeholder="Description" 
-                      value={item.description} onChange={(e) => handleItemChange(i, 'description', e.target.value)}
-                      className="w-full bg-transparent border-b border-white/10 mb-2 pb-1 outline-none text-sm font-medium"
-                    />
+                    <input type="text" placeholder="Description" value={item.description} onChange={(e) => handleItemChange(i, 'description', e.target.value)} className="w-full bg-transparent border-b border-white/10 mb-2 pb-1 outline-none text-sm font-medium" />
                     <div className="flex gap-2">
                       <div className="w-16">
-                         <input type="number" placeholder="Qty" value={item.qty} onChange={(e) => handleItemChange(i, 'qty', e.target.value)} className="w-full bg-[#0a0a0a] border border-white/10 p-1.5 rounded text-xs text-center outline-none text-gray-300" />
+                          <input type="number" placeholder="Qty" value={item.qty} onChange={(e) => handleItemChange(i, 'qty', e.target.value)} className="w-full bg-[#0a0a0a] border border-white/10 p-1.5 rounded text-xs text-center outline-none text-gray-300" />
                       </div>
                       <div className="flex-1">
-                         <input type="number" placeholder="Rate" value={item.rate} onChange={(e) => handleItemChange(i, 'rate', e.target.value)} className="w-full bg-[#0a0a0a] border border-white/10 p-1.5 rounded text-xs outline-none text-gray-300" />
+                          <input type="number" placeholder="Rate" value={item.rate} onChange={(e) => handleItemChange(i, 'rate', e.target.value)} className="w-full bg-[#0a0a0a] border border-white/10 p-1.5 rounded text-xs outline-none text-gray-300" />
                       </div>
                     </div>
                     <button onClick={() => removeItem(i)} className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition cursor-pointer"><FaTrash size={10}/></button>
@@ -224,182 +208,180 @@ const InvoiceGenerator = () => {
                  </div>
                  <div className="flex items-center gap-3">
                    {discountType === 'amount' ? <FaRupeeSign className="text-gray-500 text-xs"/> : <FaPercentage className="text-gray-500 text-xs"/>}
-                   <input 
-                     type="number" value={discountValue} onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)} 
-                     className="flex-1 bg-[#0a0a0a] border border-white/10 p-1.5 rounded text-xs text-right outline-none text-white" 
-                     placeholder="0"
-                   />
+                   <input type="number" value={discountValue} onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)} className="flex-1 bg-[#0a0a0a] border border-white/10 p-1.5 rounded text-xs text-right outline-none text-white" placeholder="0" />
                  </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* --- RIGHT: PREVIEW CONTAINER (Center) --- */}
-        <div className="flex-1 flex justify-center bg-gray-800 p-8 rounded-xl overflow-hidden border border-white/5 print:bg-white print:p-0 print:border-none print:w-full print:h-full">
-          
-          {/* THE ACTUAL A4 INVOICE */}
-          <div 
-            ref={componentRef} 
-            className="bg-white text-black w-[210mm] min-h-[297mm] h-auto p-[15mm] relative shadow-2xl overflow-visible"
-            style={{ fontFamily: "'Inter', sans-serif" }} 
-          >
-            {/* --- WATERMARK (FIXED POSITION FOR MULTI-PAGE) --- */}
-            <div className="watermark fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0">
-               <img 
-                 src={dtsLogo} 
-                 alt="Watermark" 
-                 className="w-[500px] opacity-[0.06] object-contain" 
-               />
+      </div>
+
+      {/* --- RIGHT: PREVIEW CONTAINER (Always visible in DOM, scaled for Print) --- */}
+      <div className="flex justify-center print-only-container lg:absolute lg:top-24 lg:left-[450px] lg:right-0 no-print-bg">
+         
+         <div 
+           className="bg-white text-black w-[210mm] min-h-[297mm] h-auto relative shadow-2xl overflow-hidden print:shadow-none print:w-full print:h-full print:overflow-visible"
+           style={{ fontFamily: "'Inter', sans-serif" }} 
+         >
+            {/* --- WATERMARK --- */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0">
+               <img src={dtsLogo} alt="Watermark" className="w-[500px] opacity-[0.04] object-contain grayscale" />
             </div>
 
-            {/* --- MAIN CONTENT (Z-10 to stay above watermark) --- */}
-            <div className="relative z-10 h-full flex flex-col">
+            {/* --- CONTENT Z-INDEX 10 --- */}
+            <div className="relative z-10 h-full flex flex-col bg-white">
               
-              {/* Header */}
-              <div className="flex justify-between items-start border-b border-gray-200 pb-8 mb-8">
-                <div className="flex flex-col items-start">
-                    <img src={dtsLogo} alt="DTS Logo" className="h-20 w-auto object-contain mb-3" />
-                    <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium">{companyDetails.slogan}</p>
+              {/* ================= NEW STYLISH HEADER (OFFER LETTER STYLE) ================= */}
+              <div className="bg-[#1a1a1a] flex justify-between items-start px-12 py-8 border-b-4 border-coral print:bg-[#1a1a1a] print:text-white print-color-adjust:exact">
+                <div className="flex flex-col">
+                    {/* White Logo Container to pop out */}
+                    <div className="bg-white p-2 rounded-lg w-fit mb-2 shadow-lg">
+                       <img src={dtsLogo} alt="DT Solution" className="h-12 object-contain" />
+                    </div>
+                    <p className="text-[9px] font-bold tracking-[0.3em] text-coral uppercase ml-1">Designing Transformation</p>
                 </div>
                 <div className="text-right">
-                  <h1 className="text-5xl font-extralight text-gray-300 uppercase tracking-widest leading-none mb-2">Invoice</h1>
-                  <p className="font-bold text-lg text-black">#{invoiceData.invoiceNo}</p>
+                  <h1 className="text-5xl font-extrabold text-white tracking-wide uppercase leading-none">INVOICE</h1>
+                  <p className="font-mono text-lg text-gray-300 mt-1">#{invoiceData.invoiceNo}</p>
                   
-                  <div className="mt-2 text-right">
-                    <p className="text-xs text-gray-500">Date: <span className="text-black font-medium">{new Date(invoiceData.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span></p>
-                    <p className="text-xs text-red-500 font-bold mt-1">Due Date: {getDueDate(invoiceData.date)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Billing Info */}
-              <div className="flex justify-between mb-12 gap-8">
-                <div className="w-[45%]">
-                  <p className="text-[10px] font-bold uppercase text-[#FF5A36] mb-3 tracking-widest border-b border-[#FF5A36]/20 pb-1 inline-block">Billed To</p>
-                  <p className="font-bold text-xl text-black leading-tight mb-2">{invoiceData.clientName || 'Client Name'}</p>
-                  <p className="text-sm text-gray-600 whitespace-pre-line leading-relaxed opacity-80">{invoiceData.clientAddress || 'Address details...'}</p>
-                </div>
-                <div className="w-[45%] text-right">
-                  <p className="text-[10px] font-bold uppercase text-[#FF5A36] mb-3 tracking-widest border-b border-[#FF5A36]/20 pb-1 inline-block">Billed By</p>
-                  <p className="font-bold text-base text-black mb-1">{companyDetails.name}</p>
-                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{companyDetails.address}</p>
-                  <div className="mt-3 space-y-1">
-                    <p className="text-xs text-gray-500">P: {companyDetails.phone}</p>
-                  </div>
-                  <div className="mt-3">
-                    <span className="bg-gray-100 border border-gray-200 px-2 py-1 rounded text-[10px] font-bold text-gray-600">
-                      MSME: {companyDetails.msme}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Table */}
-              <div className="mb-8 flex-grow">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-black text-white">
-                      <th className="py-3 pl-4 pr-4 text-left text-[11px] font-bold uppercase tracking-wider w-[50%] rounded-l-sm">Description</th>
-                      <th className="py-3 px-4 text-center text-[11px] font-bold uppercase tracking-wider">Qty</th>
-                      <th className="py-3 px-4 text-right text-[11px] font-bold uppercase tracking-wider">Rate</th>
-                      <th className="py-3 pl-4 pr-4 text-right text-[11px] font-bold uppercase tracking-wider rounded-r-sm">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    {items.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                        <td className="py-4 pl-4 pr-4 font-medium text-gray-800 align-top">{item.description || '---'}</td>
-                        <td className="py-4 px-4 text-center text-gray-500 align-top">{item.qty}</td>
-                        <td className="py-4 px-4 text-right text-gray-500 align-top">₹{parseFloat(item.rate).toLocaleString('en-IN')}</td>
-                        <td className="py-4 pl-4 pr-4 text-right font-bold text-gray-900 align-top">₹{(item.qty * item.rate).toLocaleString('en-IN')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Totals Section */}
-              <div className="flex justify-end mb-8 page-break-inside-avoid">
-                <div className="w-1/2 bg-gray-50 p-6 rounded-lg border border-gray-100">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-gray-500 font-medium">Subtotal</span>
-                    <span className="text-sm font-bold text-gray-800">₹{totals.subtotal.toLocaleString('en-IN')}</span>
-                  </div>
-                  
-                  {totals.discountAmt > 0 && (
-                    <div className="flex justify-between mb-2 text-red-500">
-                      <span className="text-sm font-medium">
-                        Discount {discountType === 'percent' ? `(${discountValue}%)` : ''}
-                      </span>
-                      <span className="text-sm font-bold">- ₹{totals.discountAmt.toLocaleString('en-IN')}</span>
+                  <div className="mt-4 text-right flex flex-col items-end">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Issued</span>
+                        <span className="text-sm font-bold text-white">{new Date(invoiceData.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                     </div>
-                  )}
-
-                  <div className="h-px bg-gray-200 my-3"></div>
-                  
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-lg font-bold text-black">Total Due</span>
-                    <span className="text-xl font-bold text-[#FF5A36]">₹{totals.total.toLocaleString('en-IN')}</span>
-                  </div>
-                  
-                  <div className="text-right mt-2">
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">
-                      {numToWords(totals.total)} Rupees Only
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-coral font-bold uppercase tracking-wider">Due by</span>
+                        <span className="text-sm font-bold text-white">{getDueDate(invoiceData.date)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
+              {/* ================= END HEADER ================= */}
 
-              {/* FOOTER AREA */}
-              <div className="page-break-inside-avoid">
-                {/* Signatory */}
-                <div className="flex justify-end mb-6">
-                  <div className="text-center">
-                      <div className="h-16 mb-1 flex justify-center items-end border-b-2 border-black pb-2 px-2 w-[200px] mx-auto">
-                        <img src={signImg} alt="Signature" className="h-12 object-contain opacity-90" />
-                      </div>
-                      <p className="text-sm font-bold text-black mt-2">Authorized Signatory</p>
-                      <p className="text-[10px] text-gray-500">DT Solution</p>
+
+              {/* 2. BODY CONTENT (With Padding) */}
+              <div className="px-12 py-10 flex-grow">
+
+                  {/* Address Section */}
+                  <div className="flex justify-between mb-12 gap-10">
+                    <div className="w-[48%]">
+                      <p className="text-[10px] font-bold uppercase text-gray-400 mb-2 tracking-widest border-b border-gray-100 pb-1 inline-block">Bill To</p>
+                      <p className="font-bold text-xl text-black leading-tight mb-2">{invoiceData.clientName || 'Client Name'}</p>
+                      <p className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">{invoiceData.clientAddress || 'Client Address...'}</p>
+                    </div>
+                    <div className="w-[48%] text-right">
+                      <p className="text-[10px] font-bold uppercase text-gray-400 mb-2 tracking-widest border-b border-gray-100 pb-1 inline-block">Payable To</p>
+                      <p className="font-bold text-lg text-black">{companyDetails.name}</p>
+                      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{companyDetails.address}</p>
+                      <p className="text-xs text-gray-500 mt-2">M: {companyDetails.phone}</p>
+                      <p className="text-xs text-gray-500 font-mono mt-1">MSME: {companyDetails.msme}</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex justify-between items-end pb-4 border-t border-gray-200 pt-6">
-                  {/* QR Code */}
-                  <div className="flex gap-5 items-end">
-                      <div className="bg-white p-1 border border-gray-200 rounded-lg shadow-sm">
+                  {/* Table */}
+                  <div className="mb-8 flex-grow">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-100 text-black border-y border-gray-300">
+                          <th className="py-3 pl-4 pr-4 text-left text-[11px] font-bold uppercase tracking-wider w-[50%]">Item Description</th>
+                          <th className="py-3 px-4 text-center text-[11px] font-bold uppercase tracking-wider">Qty</th>
+                          <th className="py-3 px-4 text-right text-[11px] font-bold uppercase tracking-wider">Rate</th>
+                          <th className="py-3 pl-4 pr-4 text-right text-[11px] font-bold uppercase tracking-wider">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-sm">
+                        {items.map((item, idx) => (
+                          <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className="py-4 pl-4 pr-4 font-medium text-gray-800 align-top">{item.description || '---'}</td>
+                            <td className="py-4 px-4 text-center text-gray-500 align-top">{item.qty}</td>
+                            <td className="py-4 px-4 text-right text-gray-500 align-top">₹{parseFloat(item.rate).toLocaleString('en-IN')}</td>
+                            <td className="py-4 pl-4 pr-4 text-right font-bold text-gray-900 align-top">₹{(item.qty * item.rate).toLocaleString('en-IN')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Totals Section */}
+                  <div className="flex justify-end mb-2">
+                    <div className="w-[50%] bg-gray-50 p-6 rounded-lg border border-gray-200">
+                      <div className="flex justify-between mb-2">
+                        <span className="text-sm text-gray-500 font-medium">Subtotal</span>
+                        <span className="text-sm font-bold text-gray-800">₹{totals.subtotal.toLocaleString('en-IN')}</span>
+                      </div>
+                      
+                      {totals.discountAmt > 0 && (
+                        <div className="flex justify-between mb-2 text-coral">
+                          <span className="text-sm font-medium">Discount {discountType === 'percent' ? `(${discountValue}%)` : ''}</span>
+                          <span className="text-sm font-bold">- ₹{totals.discountAmt.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+
+                      <div className="h-px bg-gray-300 my-3"></div>
+                      
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-lg font-bold text-black uppercase">Total</span>
+                        <span className="text-2xl font-bold text-black">₹{totals.total.toLocaleString('en-IN')}</span>
+                      </div>
+                      
+                      <div className="text-right mt-2">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wide italic border-t border-gray-200 pt-2 inline-block">
+                          {numToWords(totals.total)} Rupees Only
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+              </div> {/* End Body Padding */}
+
+
+              {/* 3. FOOTER AREA (With Padding) */}
+              <div className="mt-auto px-12 pb-8">
+                <div className="flex justify-between items-end pb-6">
+                  
+                  {/* Payment Info & QR */}
+                  <div className="flex gap-4 items-end">
+                      <div className="bg-white p-1 border-2 border-black rounded-lg">
                         <QRCode value={upiString} size={80} fgColor="#000" level="Q" />
                       </div>
                       <div className="pb-1">
-                        <p className="text-[10px] font-bold uppercase text-[#FF5A36] tracking-widest mb-1">Payment</p>
-                        <p className="text-sm font-bold text-black">{companyDetails.upiId}</p>
-                        <p className="text-[10px] text-gray-500 mt-1">Scan to pay exact amount</p>
+                        <p className="text-[10px] font-bold uppercase text-black tracking-widest mb-1">Payment via UPI</p>
+                        <p className="text-sm font-mono font-bold text-gray-800">{companyDetails.upiId}</p>
+                        <p className="text-[9px] text-gray-500">Scan to pay exact amount</p>
                       </div>
                   </div>
 
-                  {/* Terms */}
-                  <div className="w-[45%] text-right">
-                      <p className="text-[10px] font-bold uppercase text-gray-600 mb-2 tracking-widest">Terms & Conditions</p>
-                      <ul className="text-[9px] text-gray-800 leading-relaxed list-none font-medium">
-                        {defaultTerms.map((term, i) => <li key={i} className="mb-0.5">{term}</li>)}
-                      </ul>
+                  {/* Signatory */}
+                  <div className="text-center">
+                      <div className="h-14 mb-1 flex justify-center items-end px-2 w-[180px] mx-auto">
+                        <img src={signImg} alt="Signature" className="h-12 object-contain" />
+                      </div>
+                      <div className="border-t-2 border-black pt-2 w-full">
+                         <p className="text-xs font-bold text-black uppercase tracking-wider">Authorized Signatory</p>
+                         <p className="text-[9px] text-gray-500">For, DT Solution</p>
+                      </div>
                   </div>
                 </div>
-                
-                {/* Footer Strip */}
-                <div className="border-t-2 border-[#FF5A36] mt-2 pt-3 flex justify-between items-center">
-                  <p className="text-[10px] text-gray-500">
-                    For any enquiry, email us at <span className="text-black font-bold">{companyDetails.email}</span>
-                  </p>
-                  <p className="text-[9px] text-gray-400">Page 1 of 1</p>
+
+                {/* Terms & Footer Strip (The one you liked) */}
+                <div className="bg-gray-900 text-white p-4 rounded-lg flex justify-between items-center print:bg-gray-900 print:text-white print-color-adjust:exact">
+                   <div className="w-[60%]">
+                      <p className="text-[9px] font-bold uppercase text-gray-400 mb-1 tracking-widest">Terms</p>
+                      <ul className="text-[9px] text-gray-300 list-disc pl-3 leading-relaxed">
+                        {defaultTerms.map((term, i) => <li key={i}>{term}</li>)}
+                      </ul>
+                   </div>
+                   <div className="text-right">
+                      <p className="text-[10px] font-bold">dtsolution.in</p>
+                      <p className="text-[9px] text-gray-400">{companyDetails.email}</p>
+                   </div>
                 </div>
               </div>
 
             </div>
-          </div>
-        </div>
-
+         </div>
       </div>
+
     </div>
   );
 };
